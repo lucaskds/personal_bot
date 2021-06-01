@@ -4,8 +4,13 @@ class ParticipantRepository {
     }
 
     async list() {
-        const participants = await this.model.find();
-        return participants;
+        return this.model.find();
+         
+    }
+
+    async findUser(userName) {
+        let user = {userName : userName};
+        return this.model.find(user);
     }
 }
 
