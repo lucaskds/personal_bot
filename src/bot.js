@@ -45,11 +45,9 @@ const mystatus = async(ctx) => {
 
     const cw_user = await codeWarsClient.getUserInfo(participant);
 
-    const allMongoParticipants = await listOneParticipant(cw_user.username); 
+    const participantMongo = await listOneParticipant(cw_user.username); 
 
-    const userThatCall = await allMongoParticipants.find(user => user.userName == cw_user.username);
-
-    ctx.replyWithMarkdownV2(`🏅 __*${participant}*__ 🏅\n🏆 _*Score:*_ _${cw_user.honor - userThatCall.startScore}_\n🥋 _*Rank:*_ _${cw_user.rank}_\n✅ _*Completed:*_ _${cw_user.completed - userThatCall.completed}_`)
+    ctx.replyWithMarkdownV2(`🏅 __*${participant}*__ 🏅\n🏆 _*Score:*_ _${cw_user.honor - participantMongo.startScore}_\n🥋 _*Rank:*_ _${cw_user.rank}_\n✅ _*Completed:*_ _${cw_user.completed - participantMongo.completed}_`)
 }
 
 const listAllParticipants = async () => {
