@@ -9,8 +9,7 @@ class ParticipantRepository {
     }
 
     async findUser(userName) {
-        let user = {userName : userName};
-        return this.model.find(user);
+        return this.model.find({userName : userName});
     }
 }
 
