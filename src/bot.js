@@ -27,9 +27,9 @@ const dashboard = async(ctx) => {
     const allMongoParticipants = await listAllParticipants(); 
 
     response = sortedParticipants.map((participant) => {
-        const mongoParticipant = allMongoParticipants.filter(user => user.userName == participant.username);
+        const mongoParticipant = allMongoParticipants.find(user => user.userName == participant.username);
         username = participant.username.replace(/([^a-zA-Z0-9])/, (c) => `\\${c}`)
-        return `👨‍💻 ${username}\n🏆 ${participant.honor-mongoParticipant[0].startScore}  🥋 ${participant.rank}  ✅ ${participant.completed-mongoParticipant[0].completed}\n`
+        return `👨‍💻 ${username}\n🏆 ${participant.honor - mongoParticipant.startScore}  🥋 ${participant.rank}  ✅ ${participant.completed - mongoParticipant.completed}\n`
     })
     ctx.replyWithMarkdownV2(`📊 __*DASHBOARD*__ 📊\n\n${response.join("\n")}`)
 }
@@ -43,19 +43,24 @@ const mystatus = async(ctx) => {
         return
     }
 
-    const allMongoParticipants = await listAllParticipants(); 
-    
     const cw_user = await codeWarsClient.getUserInfo(participant);
 
-    const userThatCall = await allMongoParticipants.filter(user => user.userName == cw_user.username);
+    const allMongoParticipants = await listOneParticipant(cw_user.username); 
 
-    ctx.replyWithMarkdownV2(`🏅 __*${participant}*__ 🏅\n🏆 _*Score:*_ _${cw_user.honor - userThatCall[0].startScore}_\n🥋 _*Rank:*_ _${cw_user.rank}_\n✅ _*Completed:*_ _${cw_user.completed - userThatCall[0].completed}_`)
+    const userThatCall = await allMongoParticipants.find(user => user.userName == cw_user.username);
+
+    ctx.replyWithMarkdownV2(`🏅 __*${participant}*__ 🏅\n🏆 _*Score:*_ _${cw_user.honor - userThatCall.startScore}_\n🥋 _*Rank:*_ _${cw_user.rank}_\n✅ _*Completed:*_ _${cw_user.completed - userThatCall.completed}_`)
 }
 
 const listAllParticipants = async () => {
     const participantRepo = new ParticipantRepository(ModelParticipant);
-    const listOfParticipants = await participantRepo.list();
-    return listOfParticipants;
+    return await participantRepo.list();
+}
+
+const listOneParticipant = async (userName) => {
+    const participantRepo = new ParticipantRepository(ModelParticipant);
+    return await participantRepo.findUser(userName);
+    
 }
 
 const bot = new Telegraf(process.env.BOT_TOKEN)
