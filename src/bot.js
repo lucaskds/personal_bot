@@ -18,18 +18,30 @@ const dashboard = async(ctx) => {
     for (participant of Object.values(mapping)) {
         participants.push(await codeWarsClient.getUserInfo(participant))
     }
-    const sortedParticipants = participants.sort((a, b) => {
-        if (a.honor < b.honor) return 1
-        if (a.honor > b.honor) return -1
-        return 0
-    })
 
     const allMongoParticipants = await listAllParticipants(); 
 
-    response = sortedParticipants.map((participant) => {
+    const actualParticipantsScore = participants.map(participant => {
         const mongoParticipant = allMongoParticipants.find(user => user.userName == participant.username);
+        const honor = participant.honor - mongoParticipant.startScore
+        const completed = participant.completed - mongoParticipant.completed;
+        return {
+            username: participant.username,
+            honor: honor,
+            rank: participant.rank,
+            completed: completed
+        }
+    });
+
+
+    const sortedParticipants = actualParticipantsScore.sort((a, b) => {
+        return b.honor - a.honor
+    })
+
+
+    response = sortedParticipants.map((participant) => {
         username = participant.username.replace(/([^a-zA-Z0-9])/, (c) => `\\${c}`)
-        return `👨‍💻 ${username}\n🏆 ${participant.honor - mongoParticipant.startScore}  🥋 ${participant.rank}  ✅ ${participant.completed - mongoParticipant.completed}\n`
+        return `👨‍💻 ${username}\n🏆 ${participant.honor}  🥋 ${participant.rank}  ✅ ${participant.completed}\n`
     })
     ctx.replyWithMarkdownV2(`📊 __*DASHBOARD*__ 📊\n\n${response.join("\n")}`)
 }
