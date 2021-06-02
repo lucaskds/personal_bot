@@ -37,7 +37,7 @@ const dashboard = async(ctx) => {
     const sortedParticipants = actualParticipantsScore.sort((a, b) => {
         if (a.honor < b.honor) return 1
         if (a.honor > b.honor) return -1
-        if (a.honor == b.honnor) return a.completed - b.completed
+        if (a.honor == b.honor) return a.completed - b.completed
         return 0
     })
 
@@ -60,20 +60,19 @@ const mystatus = async(ctx) => {
 
     const cw_user = await codeWarsClient.getUserInfo(participant);
 
-    const participantMongo = await listOneParticipant(cw_user.username); 
+    const participantMongo = await getUser(cw_user.username); 
 
     ctx.replyWithMarkdownV2(`🏅 __*${participant}*__ 🏅\n🏆 _*Score:*_ _${cw_user.honor - participantMongo.startScore}_\n🥋 _*Rank:*_ _${cw_user.rank}_\n✅ _*Completed:*_ _${cw_user.completed - participantMongo.completed}_`)
 }
 
 const listAllParticipants = async () => {
     const participantRepo = new ParticipantRepository(ModelParticipant);
-    return await participantRepo.list();
+    return participantRepo.list();
 }
 
-const listOneParticipant = async (userName) => {
+const getUser = async (userName) => {
     const participantRepo = new ParticipantRepository(ModelParticipant);
-    return await participantRepo.findUser(userName);
-    
+    return participantRepo.findUser(userName);
 }
 
 const bot = new Telegraf(process.env.BOT_TOKEN)
