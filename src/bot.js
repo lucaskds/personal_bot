@@ -35,7 +35,10 @@ const dashboard = async(ctx) => {
 
 
     const sortedParticipants = actualParticipantsScore.sort((a, b) => {
-        return b.honor - a.honor
+        if (a.honor < b.honor) return 1
+        if (a.honor > b.honor) return -1
+        if (a.honor == b.honnor) return a.completed - b.completed
+        return 0
     })
 
 
