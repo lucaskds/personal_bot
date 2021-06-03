@@ -14,12 +14,12 @@ mongoose
     })
     .then(() => {
         console.log('DB Connected');
+        bot.launch();
     })
     .catch((error) => {
-        console.log(error);
+        console.log('DB Connection error: ', error);
     });
     
-bot.launch();
 app.listen(PORT);
 
 const pingInMe = () => {
