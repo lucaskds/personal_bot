@@ -1,5 +1,7 @@
 const { Telegraf, Markup } = require('telegraf')
 const codeWarsClient = require('./codewars')
+const ParticipantRepository = require('./repositories/participant');
+const ModelParticipant = require('./models/participants');
 
 const start = (ctx) => {
     const from = ctx.update.message.from
@@ -16,11 +18,30 @@ const dashboard = async(ctx) => {
     for (participant of Object.values(mapping)) {
         participants.push(await codeWarsClient.getUserInfo(participant))
     }
-    const sortedParticipants = participants.sort((a, b) => {
+
+    const allMongoParticipants = await listAllParticipants(); 
+
+    const actualParticipantsScore = participants.map(participant => {
+        const mongoParticipant = allMongoParticipants.find(user => user.userName == participant.username);
+        const honor = participant.honor - mongoParticipant.startScore
+        const completed = participant.completed - mongoParticipant.completed;
+        return {
+            username: participant.username,
+            honor: honor,
+            rank: participant.rank,
+            completed: completed
+        }
+    });
+
+
+    const sortedParticipants = actualParticipantsScore.sort((a, b) => {
         if (a.honor < b.honor) return 1
         if (a.honor > b.honor) return -1
+        if (a.honor == b.honor) return a.completed - b.completed
         return 0
     })
+
+
     response = sortedParticipants.map((participant) => {
         username = participant.username.replace(/([^a-zA-Z0-9])/, (c) => `\\${c}`)
         return `👨‍💻 ${username}\n🏆 ${participant.honor}  🥋 ${participant.rank}  ✅ ${participant.completed}\n`
@@ -36,8 +57,22 @@ const mystatus = async(ctx) => {
         ctx.replyWithMarkdownV2(`Opa ${from.first_name}, parece que você não está participando do desafio\\.\\.\\. 😢\n[Lucas](tg://user?id=${process.env.MY_USER_ID}) corre aqui\\! 🏃‍♂️`)
         return
     }
-    const cw_user = await codeWarsClient.getUserInfo(participant)
-    ctx.replyWithMarkdownV2(`🏅 __*${participant}*__ 🏅\n🏆 _*Honor:*_ _${cw_user.honor}_\n🥋 _*Rank:*_ _${cw_user.rank}_\n✅ _*Completed:*_ _${cw_user.completed}_`)
+
+    const cw_user = await codeWarsClient.getUserInfo(participant);
+
+    const participantMongo = await getUser(cw_user.username); 
+
+    ctx.replyWithMarkdownV2(`🏅 __*${participant}*__ 🏅\n🏆 _*Score:*_ _${cw_user.honor - participantMongo.startScore}_\n🥋 _*Rank:*_ _${cw_user.rank}_\n✅ _*Completed:*_ _${cw_user.completed - participantMongo.completed}_`)
+}
+
+const listAllParticipants = async () => {
+    const participantRepo = new ParticipantRepository(ModelParticipant);
+    return participantRepo.list();
+}
+
+const getUser = async (userName) => {
+    const participantRepo = new ParticipantRepository(ModelParticipant);
+    return participantRepo.findUser(userName);
 }
 
 const bot = new Telegraf(process.env.BOT_TOKEN)
